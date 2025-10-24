@@ -1,0 +1,15 @@
+{
+    "[opl]": {
+        "files.encoding": "cp437",
+        "files.eol": "\r\n"
+    },
+    "files.exclude": {
+        "*.OB3": true,
+        "*.OPK": true
+    },
+    "files.associations": {
+        "*.OPL": "opl",
+        "*.TRN": "opl",
+        "*.BLD": "opl"
+    }
+}

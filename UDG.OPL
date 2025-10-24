@@ -1,0 +1,199 @@
+UDG:
+LOCAL MODE%,U%,K%,D%,I%,J%,DATA%(8)
+
+MODE%=1
+U%=-1
+
+WHILE MODE%<>0
+    IF MODE%=1
+        KSTAT 3 REM NUMERIC & UPPER CASE
+        CLS
+
+        PRINT " *** UDG Editor ***"
+        PRINT ""
+        PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7)
+        PRINT "0 1 2 3 4 5 6 7 Exit";
+        K%=GET
+
+        IF K%=1 OR K%=69 OR K%=101 OR K%=37 REM ON/CLEAR or "E" or "e" or "%"
+            MODE%=0
+            BREAK
+        ELSEIF K%>=48 AND K%<=55 REM NUMBER 0-7 (CODES 48-55)
+            U%=K%-48
+
+            I%=0
+            WHILE I% < 8
+                WHILE PEEKB($0180) AND $80 :ENDWH REM WAIT FOR LCD
+
+                POKEB $0180,$40+8*U%+I%
+                D%=PEEKB($0181)
+
+                DATA%(I%+1)=D%
+
+                I%=I%+1
+            ENDWH
+
+            D%=0 REM LEFT PART ACTIVE
+            MODE%=2 REM EDIT MODE
+        ENDIF
+    ELSEIF MODE%=2
+        CLS
+        KSTAT 1 REM ALPHA & UPPER CASE
+        D%=0
+
+        PRINT "UDG:",U%
+        PRINT "CHR:",CHR$(U%)
+
+        WHILE MODE%=2
+            I%=1 REM ROW
+            WHILE I%<=4
+                J%=4 REM COL
+                AT 8,I% :PRINT "|";
+                WHILE J%>=0
+                    IF DATA%(I%) AND 2**J%
+                        PRINT CHR$(255-10*D%); REM 1
+                    ELSE
+                        PRINT CHR$(254); REM 0
+                    ENDIF
+                    J%=J%-1
+                ENDWH
+                J%=4 REM COL
+                PRINT "|";
+                WHILE J%>=0
+                    IF DATA%(I%+4) AND 2**J%
+                        PRINT CHR$(245+10*D%); REM 1
+                    ELSE
+                        PRINT CHR$(254); REM 0
+                    ENDIF
+                    J%=J%-1
+                ENDWH
+                PRINT "|";
+                I%=I%+1
+            ENDWH
+
+            K%=GET
+            I%=0
+
+            IF K%=1
+                MODE%=1 REM CLEAR TO GO BACK TO SELECTION
+            ELSEIF K%=2 REM MODE TO GO DISPLAY UDG CMD
+                MODE%=3 REM GO BACK TO SELECTION
+            ELSEIF K%>=3 AND K%<=6 REM SWITCH ACTIVE PART
+                D%=(D%+1) AND 1
+            ELSEIF K%=7 REM CLEAR UDG
+                DATA%(1)=0
+                DATA%(2)=0
+                DATA%(3)=0
+                DATA%(4)=0
+                DATA%(5)=0
+                DATA%(6)=0
+                DATA%(7)=0
+                DATA%(8)=0
+                UDG U%,DATA%(1),DATA%(2),DATA%(3),DATA%(4),DATA%(5),DATA%(6),DATA%(7),DATA%(8)
+            ELSEIF K%=66 REM B
+                I%=1 :J%=4
+            ELSEIF K%=67 REM C
+                I%=1 :J%=3
+            ELSEIF K%=68 REM D
+                I%=1 :J%=2
+            ELSEIF K%=69 REM E
+                I%=1 :J%=1
+            ELSEIF K%=70 REM F
+                I%=1 :J%=0
+            ELSEIF K%=72 REM H
+                I%=2 :J%=4
+            ELSEIF K%=73 REM I
+                I%=2 :J%=3
+            ELSEIF K%=74 REM J
+                I%=2 :J%=2
+            ELSEIF K%=75 REM K
+                I%=2 :J%=1
+            ELSEIF K%=76 REM L
+                I%=2 :J%=0
+            ELSEIF K%=78 REM N
+                I%=3 :J%=4
+            ELSEIF K%=79 REM O
+                I%=3 :J%=3
+            ELSEIF K%=80 REM P
+                I%=3 :J%=2
+            ELSEIF K%=81 REM Q
+                I%=3 :J%=1
+            ELSEIF K%=82 REM R
+                I%=3 :J%=0
+            ELSEIF K%=84 REM T
+                I%=4 :J%=4
+            ELSEIF K%=85 REM U
+                I%=4 :J%=3
+            ELSEIF K%=86 REM V
+                I%=4 :J%=2
+            ELSEIF K%=87 REM W
+                I%=4 :J%=1
+            ELSEIF K%=88 REM X
+                I%=4 :J%=0
+            ENDIF
+
+            IF I%<>0
+                I%=I%+4*D%
+                IF DATA%(I%) AND 2**J%
+                    DATA%(I%)=DATA%(I%) - 2**J%
+                ELSE
+                    DATA%(I%)=DATA%(I%) + 2**J%
+                ENDIF
+
+                UDG U%,DATA%(1),DATA%(2),DATA%(3),DATA%(4),DATA%(5),DATA%(6),DATA%(7),DATA%(8)
+            ENDIF
+        ENDWH
+    ELSEIF MODE%=3
+        CLS
+        KSTAT 3 REM NUMERIC & UPPER CASE
+        I%=0 :J%=0 :D%=0
+        PRINT "UDG ",U%;","
+        WHILE MODE%=3
+            CURSOR OFF
+            AT 1,2
+            PRINT "   ",NUM$(DATA%(1),-2);",",NUM$(DATA%(2),-2);",",NUM$(DATA%(3),-2);",",NUM$(DATA%(4),-2);","
+            PRINT " ";CHR$(U%);" ",NUM$(DATA%(5),-2);",",NUM$(DATA%(6),-2);",",NUM$(DATA%(7),-2);",",NUM$(DATA%(8),-2)
+
+            AT I%*4+6,J%+2 REM CURSOR LOCATION
+            CURSOR ON
+
+            K%=GET
+            CURSOR OFF
+
+            IF K%=1
+                MODE%=1 REM CLEAR TO GO BACK TO SELECTION
+            ELSEIF K%=2
+                MODE%=2 REM RETURN TO VISUAL EDITOR
+            ELSEIF K%=3 OR K%=4 REM UP OR DOWN
+                J%=(J%+1) AND 1
+                D%=0
+            ELSEIF K%=5 REM LEFT
+                I%=(I%-1) AND 3
+                D%=0
+            ELSEIF K%=6 REM RIGHT
+                I%=(I%+1) AND 3
+                D%=0
+            ELSEIF K%=13 REM EXE
+                IF I%=3
+                    J%=(J%+1) AND 1
+                ENDIF
+                I%=(I%+1) AND 3
+                D%=0
+            ELSEIF K%>=48 AND K% <= 57 REM NUMBER CODES 0-9
+                DATA%(I%+4*J%+1)=(DATA%(I%+4*J%+1)*10*D%+K%-48) AND 31
+                UDG U%,DATA%(1),DATA%(2),DATA%(3),DATA%(4),DATA%(5),DATA%(6),DATA%(7),DATA%(8)
+                D%=(D%+1) AND 1
+            ELSEIF K%=7 REM CLEAR UDG
+                DATA%(1)=0
+                DATA%(2)=0
+                DATA%(3)=0
+                DATA%(4)=0
+                DATA%(5)=0
+                DATA%(6)=0
+                DATA%(7)=0
+                DATA%(8)=0
+                UDG U%,DATA%(1),DATA%(2),DATA%(3),DATA%(4),DATA%(5),DATA%(6),DATA%(7),DATA%(8)
+            ENDIF
+        ENDWH
+    ENDIF
+ENDWH
