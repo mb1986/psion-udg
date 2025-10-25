@@ -1,23 +1,27 @@
 UDG:
-LOCAL MODE%,U%,K%,D%,I%,J%,DATA%(8)
+LOCAL MODE%,LAST%,U%,K%,D%,I%,J%,DATA%(8),TEXT$(80)
 
 MODE%=1
 U%=-1
+TEXT$="T"+REPT$(" ",18)+"AE"+REPT$(" ",18)+"RS"+REPT$(" ",18)+"ET"+REPT$(" ",18)+"A"
 
 WHILE MODE%<>0
     IF MODE%=1
+        LAST%=MODE%
         KSTAT 3 REM NUMERIC & UPPER CASE
         CLS
 
         PRINT " *** UDG Editor ***"
-        PRINT ""
-        PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7)
-        PRINT "0 1 2 3 4 5 6 7 Exit";
+        PRINT "   mb1986 v.0.1.0"
+        PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7),"Load";
+        PRINT "0 1 2 3 4 5 6 7 Save";
         K%=GET
 
-        IF K%=1 OR K%=69 OR K%=101 OR K%=37 REM ON/CLEAR or "E" or "e" or "%"
+        IF K%=1 REM ON/CLEAR
             MODE%=0
             BREAK
+        ELSEIF K%=32
+            MODE%=4
         ELSEIF K%>=48 AND K%<=55 REM NUMBER 0-7 (CODES 48-55)
             U%=K%-48
 
@@ -37,6 +41,7 @@ WHILE MODE%<>0
             MODE%=2 REM EDIT MODE
         ENDIF
     ELSEIF MODE%=2
+        LAST%=MODE%
         CLS
         KSTAT 1 REM ALPHA & UPPER CASE
         D%=0
@@ -130,6 +135,8 @@ WHILE MODE%<>0
                 I%=4 :J%=1
             ELSEIF K%=88 REM X
                 I%=4 :J%=0
+            ELSEIF K%=32
+                MODE%=4
             ENDIF
 
             IF I%<>0
@@ -144,6 +151,7 @@ WHILE MODE%<>0
             ENDIF
         ENDWH
     ELSEIF MODE%=3
+        LAST%=MODE%
         CLS
         KSTAT 3 REM NUMERIC & UPPER CASE
         I%=0 :J%=0 :D%=0
@@ -193,6 +201,121 @@ WHILE MODE%<>0
                 DATA%(7)=0
                 DATA%(8)=0
                 UDG U%,DATA%(1),DATA%(2),DATA%(3),DATA%(4),DATA%(5),DATA%(6),DATA%(7),DATA%(8)
+            ELSEIF K%=32
+                MODE%=4
+            ENDIF
+        ENDWH
+    ELSEIF MODE%=4
+        KSTAT 1 REM ALPHA & UPPER CASE
+        I%=0 :J%=0
+        WHILE MODE%=4
+            D%=-1
+            AT 1,1
+            PRINT TEXT$;
+
+            AT I%+1,J%+1 REM CURSOR LOCATION
+            CURSOR ON
+            K%=GET
+            CURSOR OFF
+
+            IF K%=2 REM MODE
+                KSTAT 3
+                D%=0
+                CLS
+                PRINT "     Code:"
+                PRINT REPT$("-",20);
+                PRINT "     UDG   0-7"
+                PRINT "    ASCII 32-255"
+                WHILE 1
+                    AT 12,1
+                    IF (D%>=0 AND D%<=7) OR (D%>=32 AND D% <= 255)
+                        PRINT "    ",CHR$(126),CHR$(D%)
+                    ELSE
+                        PRINT CHR$(26);
+                    ENDIF
+
+                    AT 12,1 :PRINT D%
+
+                    CURSOR ON
+                    K%=GET
+                    CURSOR OFF
+
+                    IF K%>=48 AND K% <=57
+                        D%=D%*10+K%-48
+                    ELSEIF K%=13 REM EXE
+                        IF (D%>=0 AND D%<=7) OR (D%>=32 AND D% <= 255)
+                            K%=D%
+                            BREAK
+                        ELSE
+                            K%=0
+                            D%=-1
+                            BREAK
+                        ENDIF
+                    ELSEIF K%=7
+                        D%=0
+                    ELSEIF K%=8
+                        D%=D%/10
+                    ELSEIF K%=1 OR K%=2
+                        K%=0
+                        D%=-1
+                        BREAK
+                    ENDIF
+
+                    IF D%>255
+                        D%=0
+                    ENDIF
+                ENDWH
+                KSTAT 1
+            ENDIF
+
+            IF (K%>=32 AND K%<=126) OR D%=K%
+                D%=I%+J%*20+1
+                IF D%=1
+                    TEXT$=CHR$(K%)+RIGHT$(TEXT$,LEN(TEXT$)-1)
+                ELSEIF D%=LEN(TEXT$)
+                    TEXT$=LEFT$(TEXT$,D%-1)+CHR$(K%)
+                ELSE
+                    TEXT$=LEFT$(TEXT$,D%-1)+CHR$(K%)+RIGHT$(TEXT$,LEN(TEXT$)-D%)
+                ENDIF
+
+                IF I%=19
+                    J%=(J%+1) AND 3
+                    I%=0
+                ELSE
+                    I%=I%+1
+                ENDIF
+            ELSEIF K%=1 REM CLEAR/ON
+                MODE%=LAST%
+            ELSEIF K%=8 REM DEL
+                IF I%=0
+                    J%=(J%-1) AND 3
+                    I%=19
+                ELSE
+                    I%=I%-1
+                ENDIF
+
+                D%=I%+J%*20+1
+                IF D%=1
+                    TEXT$=" "+RIGHT$(TEXT$,LEN(TEXT$)-1)
+                ELSEIF D%=LEN(TEXT$)
+                    TEXT$=LEFT$(TEXT$,D%-1)+" "
+                ELSE
+                    TEXT$=LEFT$(TEXT$,D%-1)+" "+RIGHT$(TEXT$,LEN(TEXT$)-D%)
+                ENDIF
+            ELSEIF K%=3 REM UP
+                J%=(J%-1) AND 3
+            ELSEIF K%=4 REM DOWN
+                J%=(J%+1) AND 3
+            ELSEIF K%=5 REM LEFT
+                IF I%=0 :I%=19 :ELSE :I%=I%-1 :ENDIF
+            ELSEIF K%=6 REM RIGHT
+                IF I%=19 :I%=0 :ELSE :I%=I%+1 :ENDIF
+            ELSEIF K%=13 REM EXE
+                J%=(J%+1) AND 3
+                I%=0
+            ELSEIF K%=7 REM SHIFT & DEL
+                TEXT$=REPT$(" ",80)
+                I%=0 :J%=0
             ENDIF
         ENDWH
     ENDIF
