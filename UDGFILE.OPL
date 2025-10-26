@@ -1,5 +1,5 @@
 UDGFILE:(F$)
-LOCAL MODE%,A$(8,16),NAME$(12),ROW%,K%
+LOCAL MODE%,A$(8,16),NAME$(12),ROW%,K%,POS%
 
 REM  12345678901234567890
 REM +--------------------+
@@ -55,16 +55,18 @@ WHILE MODE%=0
         MODE%=2
         WHILE MODE%=2
             IF NOT EOF
-                AT 1,1 :PRINT CHR$(14);"Loading..."
+                IF POS%<>POS
+                    AT 1,1 :PRINT CHR$(14);"Loading..."
 
-                UDGLOAD:(0, A.U0$)
-                UDGLOAD:(1, A.U1$)
-                UDGLOAD:(2, A.U2$)
-                UDGLOAD:(3, A.U3$)
-                UDGLOAD:(4, A.U4$)
-                UDGLOAD:(5, A.U5$)
-                UDGLOAD:(6, A.U6$)
-                UDGLOAD:(7, A.U7$)
+                    UDGLOAD:(0, A.U0$)
+                    UDGLOAD:(1, A.U1$)
+                    UDGLOAD:(2, A.U2$)
+                    UDGLOAD:(3, A.U3$)
+                    UDGLOAD:(4, A.U4$)
+                    UDGLOAD:(5, A.U5$)
+                    UDGLOAD:(6, A.U6$)
+                    UDGLOAD:(7, A.U7$)
+                ENDIF
 
                 AT 1,1 :PRINT CHR$(14);"Name:",A.NAME$
                 AT 1,3 :PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7),"Load";
@@ -74,6 +76,8 @@ WHILE MODE%=0
                 AT 1,3 :PRINT CHR$(22);
                 AT 1,4 :PRINT CHR$(23);
             ENDIF
+
+            POS%=POS
 
             MODE%=3
             WHILE MODE%=3
@@ -107,6 +111,7 @@ WHILE MODE%=0
                         IF K%=%Y OR K%=%y
                             ERASE
                             IF EOF :LAST :ENDIF
+                            POS%=0
                             MODE%=2
                             BREAK
                         ELSEIF K%=%N OR K%=%n
