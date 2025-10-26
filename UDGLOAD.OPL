@@ -5,7 +5,7 @@ I%=0
 WHILE I%<8
     C$=MID$(DATA$,I%*2+1,2)
 
-    D%(I%+1)=INT(VAL(C$))
+    D%(I%+1)=VAL(C$)
 
     I%=I%+1
 ENDWH
