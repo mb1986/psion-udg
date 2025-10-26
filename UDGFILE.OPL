@@ -1,0 +1,152 @@
+UDGFILE:(F$)
+LOCAL MODE%,A$(8,16),NAME$(12),ROW%,K%
+
+REM  12345678901234567890
+REM +--------------------+
+REM |                    |
+REM |                    |
+REM |                    |
+REM |                    |
+REM +--------------------+
+
+CLS
+
+IF NOT EXIST(F$)
+    PRINT " File not present!"
+    PRINT REPT$("-",20);
+    PAUSE 20
+    RETURN
+ENDIF
+
+OPEN F$,A,NAME$,U0$,U1$,U2$,U3$,U4$,U5$,U6$,U7$,T$
+
+PRINT "Processing..."
+PRINT REPT$("-",20);
+
+A$(1)=UDGSAVE$:(0)
+A$(2)=UDGSAVE$:(1)
+A$(3)=UDGSAVE$:(2)
+A$(4)=UDGSAVE$:(3)
+A$(5)=UDGSAVE$:(4)
+A$(6)=UDGSAVE$:(5)
+A$(7)=UDGSAVE$:(6)
+A$(8)=UDGSAVE$:(7)
+
+WHILE MODE%=0
+    AT 1,3 :PRINT CHR$(22);
+    AT 1,4 :PRINT CHR$(23);
+    AT 1,1 :PRINT CHR$(14);"Find:", :TRAP INPUT NAME$
+    IF ERR=206 REM INPUT ESCAPE ERROR
+        CLOSE
+        GOTO EXIT::
+    ENDIF
+
+    FIRST
+
+    MODE%=1
+    WHILE MODE%=1
+        ROW%=FINDW(NAME$+CHR$(9)+"*")
+        IF ROW%=0
+            FIRST
+            AT 1,1 :PRINT CHR$(14);" Record not found!"
+            PAUSE 20
+        ENDIF
+
+        MODE%=2
+        WHILE MODE%=2
+            IF NOT EOF
+                AT 1,1 :PRINT CHR$(14);"Loading..."
+
+                UDGLOAD:(0, A.U0$)
+                UDGLOAD:(1, A.U1$)
+                UDGLOAD:(2, A.U2$)
+                UDGLOAD:(3, A.U3$)
+                UDGLOAD:(4, A.U4$)
+                UDGLOAD:(5, A.U5$)
+                UDGLOAD:(6, A.U6$)
+                UDGLOAD:(7, A.U7$)
+
+                AT 1,1 :PRINT CHR$(14);"Name:",A.NAME$
+                AT 1,3 :PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7),"Load";
+                AT 1,4 :PRINT "0 1 2 3 4 5 6 7 Del"
+            ELSE
+                AT 1,1 :PRINT CHR$(14);"   File is empty!";
+                AT 1,3 :PRINT CHR$(22);
+                AT 1,4 :PRINT CHR$(23);
+            ENDIF
+
+            MODE%=3
+            WHILE MODE%=3
+                K%=GET
+                IF K%=1 REM ON/CLEAR
+                    MODE%=0
+                ELSEIF K%=13 REM EXE
+                    NEXT
+                    MODE%=1
+                ELSEIF K%=3 REM UP - PREV RECORD
+                    BACK
+                    MODE%=2
+                ELSEIF K%=4 REM DOWN - NEXT RECORD
+                    NEXT
+                    IF EOF :LAST :ENDIF
+                    MODE%=2
+                ELSEIF K%=5 REM LEFT - FIRST RECORD
+                    FIRST
+                    MODE%=2
+                ELSEIF K%=6 REM RIGHT - LAST RECORD
+                    LAST
+                    MODE%=2
+                ELSEIF K%=%L OR K%=%l
+                    TEXT$=A.T$
+                    CLOSE
+                    RETURN
+                ELSEIF K%=%D OR K%=%d OR K%=8 REM DEL - DELETE RECORD
+                    AT 1,1 :PRINT CHR$(14);"Remove record? [Y/N]";
+                    WHILE 1
+                        K%=GET
+                        IF K%=%Y OR K%=%y
+                            ERASE
+                            IF EOF :LAST :ENDIF
+                            MODE%=2
+                            BREAK
+                        ELSEIF K%=%N OR K%=%n
+                            MODE%=2
+                            BREAK
+                        ENDIF
+                    ENDWH
+
+                ELSEIF K%=7 REM SHIFT & DEL - DELETE WHOLE WILE
+                    AT 1,1 :PRINT CHR$(14);" Delete file? [Y/N]";
+                    AT 1,3 :PRINT CHR$(22);
+                    AT 1,4 :PRINT CHR$(23);
+                    WHILE 1
+                        K%=GET
+                        IF K%=%Y OR K%=%y
+                            CLOSE
+                            DELETE F$
+                            GOTO EXIT::
+                        ELSEIF K%=%N OR K%=%n
+                            MODE%=2
+                            BREAK
+                        ENDIF
+                    ENDWH
+                ENDIF
+            ENDWH
+        ENDWH
+    ENDWH
+ENDWH
+
+EXIT::
+
+CLS
+PRINT "Processing..."
+PRINT REPT$("-",20);
+
+UDGLOAD:(0, A$(1))
+UDGLOAD:(1, A$(2))
+UDGLOAD:(2, A$(3))
+UDGLOAD:(3, A$(4))
+UDGLOAD:(4, A$(5))
+UDGLOAD:(5, A$(6))
+UDGLOAD:(6, A$(7))
+UDGLOAD:(7, A$(8))

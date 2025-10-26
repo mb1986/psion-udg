@@ -1,0 +1,15 @@
+UDGSAVE$:(U%)
+LOCAL V%,I%,D$(16)
+
+I%=0
+WHILE I%<8
+    WHILE PEEKB($0180) AND $80 :ENDWH REM WAIT FOR LCD
+
+    POKEB $0180,$40+8*U%+I%
+    V%=PEEKB($0181)
+    D$=D$+NUM$(V%,-2)
+
+    I%=I%+1
+ENDWH
+
+RETURN D$

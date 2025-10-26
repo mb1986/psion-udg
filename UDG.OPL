@@ -1,5 +1,6 @@
 UDG:
-LOCAL MODE%,LAST%,U%,K%,D%,I%,J%,DATA%(8),TEXT$(80)
+LOCAL MODE%,LAST%,U%,K%,D%,I%,J%,DATA%(8),NAME$(12)
+GLOBAL TEXT$(80)
 
 MODE%=1
 U%=-1
@@ -13,7 +14,7 @@ WHILE MODE%<>0
 
         PRINT " *** UDG Editor ***"
         PRINT "   mb1986 v.0.1.0"
-        PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7),"Load";
+        PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7),"File";
         PRINT "0 1 2 3 4 5 6 7 Save";
         K%=GET
 
@@ -22,6 +23,58 @@ WHILE MODE%<>0
             BREAK
         ELSEIF K%=32
             MODE%=4
+        ELSEIF K%=%S OR K%=%s OR K%=%;
+            KSTAT 1
+            IF NOT EXIST("A:MBUDG")
+                CREATE "A:MBUDG",A,NAME$,U0$,U1$,U2$,U3$,U4$,U5$,U6$,U7$,T$
+            ELSE
+                OPEN "A:MBUDG",A,NAME$,U0$,U1$,U2$,U3$,U4$,U5$,U6$,U7$,T$
+            ENDIF
+
+            CLS :AT 1,2
+            PRINT REPT$("-",20);
+            PRINT CHR$(0),CHR$(1),CHR$(2),CHR$(3),CHR$(4),CHR$(5),CHR$(6),CHR$(7)
+            PRINT "0 1 2 3 4 5 6 7"
+
+            AT 1,1 :PRINT "Save:", :TRAP INPUT NAME$
+            IF ERR<>206 REM INPUT ESCAPE ERROR
+                D%=FINDW(NAME$+CHR$(9)+"*")
+                AT 1,1 :PRINT CHR$(14);"Saving..."
+
+                A.NAME$=NAME$
+
+                A.U0$=UDGSAVE$:(0)
+                A.U1$=UDGSAVE$:(1)
+                A.U2$=UDGSAVE$:(2)
+                A.U3$=UDGSAVE$:(3)
+                A.U4$=UDGSAVE$:(4)
+                A.U5$=UDGSAVE$:(5)
+                A.U6$=UDGSAVE$:(6)
+                A.U7$=UDGSAVE$:(7)
+
+                A.T$=TEXT$
+
+                IF D%<>0
+                    AT 1,1 :PRINT "Append/Update: [A/U]"
+                    WHILE 1
+                        K%=GET
+                        IF K%=%U OR K%=%u
+                            UPDATE :BREAK
+                        ELSEIF K%=%A OR K%=%a
+                            APPEND :BREAK
+                        ENDIF
+                    ENDWH
+                ELSE
+                    APPEND
+                ENDIF
+            ENDIF
+
+            CLOSE
+            KSTAT 3
+        ELSEIF K%=%F OR K%=%f OR K%=%/ OR K%=2 REM 2=MODE - FILE MODE
+            KSTAT 1
+            UDGFILE:("A:MBUDG")
+            KSTAT 3
         ELSEIF K%>=48 AND K%<=55 REM NUMBER 0-7 (CODES 48-55)
             U%=K%-48
 
@@ -181,7 +234,7 @@ WHILE MODE%<>0
             ELSEIF K%=6 REM RIGHT
                 I%=(I%+1) AND 3
                 D%=0
-            ELSEIF K%=13 REM EXE
+            ELSEIF K%=13 OR K%=46 REM EXE OR .
                 IF I%=3
                     J%=(J%+1) AND 1
                 ENDIF

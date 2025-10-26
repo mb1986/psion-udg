@@ -1,0 +1,13 @@
+UDGLOAD:(U%,DATA$)
+LOCAL D%(8),C$(2),I%
+
+I%=0
+WHILE I%<8
+    C$=MID$(DATA$,I%*2+1,2)
+
+    D%(I%+1)=INT(VAL(C$))
+
+    I%=I%+1
+ENDWH
+
+UDG U%,D%(1),D%(2),D%(3),D%(4),D%(5),D%(6),D%(7),D%(8)
